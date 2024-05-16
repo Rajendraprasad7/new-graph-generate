@@ -42,6 +42,19 @@ int main(int argc, char* argv[]) {
 
     // cout << graph.getSize() << ' ' << graph.getOrder() << endl;
 
+    // GraphDelta<int, int> del; 
+
+    // del.generateDelta(graph, 0, 1000);
+
+    // del.printDelta();
+
+    // // graph.print();
+
+    // del.applyDelta(graph);
+    
+    // graph.print();
+    // cout << graph.getSize() << ' ' << graph.getOrder() << endl;
+
     // int inEdges = 0, outEdges = 0;
 
     // for(int i=0; i<graph.getOrder(); i++)
@@ -79,14 +92,15 @@ int main(int argc, char* argv[]) {
 
     // DiGraph<int, int> graph;
 
-    // Adding vertices
+    // // Adding vertices
     // graph.addVertex(0);
-    // graph.print();
     // graph.addVertex(1); 
     // graph.addVertex(2);
     // graph.addVertex(3); 
+    // graph.addVertex(4);
+    // graph.addVertex(5);
 
-    // Adding edges
+    // // Adding edges
     // graph.addEdge(0, 1, 1);
     // graph.addEdge(0, 2, 1);
     // graph.addEdge(1, 2, 1);
@@ -94,6 +108,17 @@ int main(int argc, char* argv[]) {
     // graph.addEdge(2, 3, 1);
     // graph.addEdge(3, 3, 1);
 
+    // GraphDelta<int, int> del; 
+
+    // del.generateDelta(graph, 0, 10);
+
+    // del.printDelta();
+
+    // graph.print();
+
+    // del.applyDelta(graph);
+
+    // graph.print();
     // // Testing vertex and edge existence
     // std::cout << "Vertex 2 exists: " << graph.hasVertex(2) << std::endl;
     // std::cout << "Edge (2, 3) exists: " << graph.hasEdge(2, 3) << std::endl;
