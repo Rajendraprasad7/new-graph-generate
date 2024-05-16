@@ -15,6 +15,7 @@ using std::make_pair;
 using std::back_inserter;
 using std::advance;
 using std::uniform_int_distribution;
+using std::discrete_distribution;
 using std::random_device;
 using std::mt19937;
 
@@ -155,14 +156,53 @@ public:
         deletions = getExistingRandomEdges(graph, numDeletions, strictDelta);
     }
 
-    // void generatePreferentialAttachmentDelta(const DiGraph<V, E>& graph, int count, bool strictDelta) {
-    //     static random_device rd;
-    //     static mt19937 rng(rd());
+    void generatePreferentialAttachmentDelta(const DiGraph<V, E>& graph, int count, bool strictDelta, double alpha, double beta, double lambda) {
+        static random_device rd;
+        static mt19937 rng(rd());
 
-    //     vector<pair<int, int>> result; 
+        vector<pair<int, int>> result;
+        unordered_map<pair<int, int>, bool, PairHash> mp;
+        result.reserve(count);
 
+        auto vertices = graph.getValidVertices();
+        int n = vertices.size();
 
-    // }
+        vector<double> f(n);
+        double total_f = 0.0;
+        for (int i = 0; i < n; ++i) {
+            double d = graph.getInDegree(vertices[i]);
+            double wt = exp(alpha + beta * log(1 + d)) - lambda;
+            if (wt < 0) wt = 0; 
+            f[i] = wt;
+            total_f += wt;
+        }
+
+        for (double& p : f) {
+            p /= total_f;
+        }
+
+        discrete_distribution<int> vertexDist(f.begin(), f.end());
+
+        while (result.size() < std::min(count,n*n)) {
+            int u = getRandomElement(vertices, rng);
+            int v = vertices[vertexDist(rng)];
+
+            if(strictDelta){
+                while (graph.hasEdge(u, v)) {
+                    v = vertices[vertexDist(rng)];
+                }
+                pair<int, int> edge = make_pair(u, v);
+                if (mp.count(edge)) continue;
+                result.push_back(edge);
+                mp[edge] = true;
+            }
+            else{
+                pair<int, int> edge = make_pair(u, v);
+                result.push_back(edge);
+            }
+        }
+        insertions = result;
+    }
 
     void applyCurrentDelta(DiGraph<V, E>& graph) {
         for (const auto& edge: insertions) {

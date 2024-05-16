@@ -101,16 +101,17 @@ int main(int argc, char* argv[]) {
     // graph.addVertex(5);
 
     // // Adding edges
-    // graph.addEdge(0, 1, 1);
-    // graph.addEdge(0, 2, 1);
+    // graph.addEdge(4, 2, 1);
+    // graph.addEdge(0, 5, 1);
     // graph.addEdge(1, 2, 1);
-    // graph.addEdge(2, 0, 1);
-    // graph.addEdge(2, 3, 1);
-    // graph.addEdge(3, 4, 1);
+    // graph.addEdge(0, 0, 1);
+    // graph.addEdge(2, 4, 1);
+    // graph.addEdge(3, 2, 1);
 
     // GraphDelta<int, int> del; 
 
-    // del.generateMixedDelta(graph, 0, 3, true);
+    // // del.generateMixedDelta(graph, 0, 3, true);
+    // del.generatePreferentialAttachmentDelta(graph, 10, false, 0, 1, 0);
 
     // del.printDelta();
 
