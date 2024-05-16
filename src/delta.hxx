@@ -39,15 +39,37 @@ auto getRandomElement(Container& container, mt19937& rng) {
 
 // Get a vector of random existing edges. If count is greater than total edges, all edges are returned.
 template <typename V, typename E>
- vector< pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int count) {
-    static  random_device rd;
-    static  mt19937 rng(rd());
+vector<pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int count) {
+    static random_device rd;
+    static mt19937 rng(rd());
 
-    auto edgeList = graph.getAllEdges();
-     vector< pair<int, int>> result;
+    if(count >= graph.getSize()){
+        return graph.getAllEdges();
+    }
+
+    vector<pair<int, int>> result;
     result.reserve(count);
 
-    sample(edgeList.begin(), edgeList.end(),  back_inserter(result), count, rng);
+    auto validVertices = graph.getValidVertices();
+    if (validVertices.empty()) {
+        return result; 
+    }
+
+    uniform_int_distribution<> vertexDist(0, static_cast<int>(validVertices.size()) - 1);
+
+    while (result.size() < count) {
+
+        int u = validVertices[vertexDist(rng)];
+        auto outEdges = graph.getOutEdges(u);
+
+        if (!outEdges.empty()) {
+            uniform_int_distribution<> edgeDist(0, static_cast<int>(outEdges.size()) - 1);
+            int v = outEdges[edgeDist(rng)];
+
+            result.emplace_back(u, v);
+        }
+    }
+
     return result;
 }
 
@@ -66,17 +88,6 @@ std::pair<int, int> getNewRandomEdge(const DiGraph<V, E>& graph) {
     return {u, v};
 }
 
-template <typename V, typename E>
-vector<pair<int, int>> getNewRandomEdges(const DiGraph<V, E>& graph, int count) {
-    vector<pair<int, int>> result;
-    result.reserve(count);
-
-    for (int i = 0; i < count; ++i) {
-        result.push_back(getNewRandomEdge(graph));
-    }
-    return result;
-}
-
 // Get a random edge that doesnt already exist (can loop forever)
 template <typename V, typename E>
  pair<int, int> getNewRandomEdgeForcibly(const DiGraph<V, E>& graph) {
@@ -92,20 +103,41 @@ template <typename V, typename E>
     return {u, v};
 }
 
+// If the flag strictlyNew is set, it is assumed that graph is sparse enough to give new edges quickly
+template <typename V, typename E>
+vector<pair<int, int>> getNewRandomEdges(const DiGraph<V, E>& graph, int count, bool strictlyNew) {
+    vector<pair<int, int>> result;
+    result.reserve(count);
+
+    if(strictlyNew){
+        for (int i = 0; i < count; ++i) {
+            result.push_back(getNewRandomEdgeForcibly(graph));
+        }
+    }
+    else{
+        for (int i = 0; i < count; ++i) {
+            result.push_back(getNewRandomEdge(graph));
+        }
+    }
+    return result;
+}
+
 template <typename V, typename E>
 class GraphDelta {
 public:
     vector<pair<int, int>> insertions;
     vector<pair<int, int>> deletions;
 
-    void generateDelta(const DiGraph<V, E>& graph, double alpha, int count) {
+    // Insertions/Deletions are SAMPLED WITH REPLACEMENT
+    // If strictDelta flag is set then each insertion/deletion will induce a change to the graph provided it is possible.
+    void generateDelta(const DiGraph<V, E>& graph, double alpha, int count, bool strictDelta) {
         static random_device rd;
         static mt19937 rng(rd());
 
         int numInsertions = static_cast<int>(alpha * count);
         int numDeletions = count - numInsertions;
 
-        insertions = getNewRandomEdges(graph, numInsertions);
+        insertions = getNewRandomEdges(graph, numInsertions, strictDelta);
         deletions = getExistingRandomEdges(graph, numDeletions);
     }
 

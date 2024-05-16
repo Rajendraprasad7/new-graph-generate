@@ -90,35 +90,35 @@ int main(int argc, char* argv[]) {
     // std::cout << "Time taken to print the graph: " << timeTaken << " milliseconds" << std::endl;
 
 
-    // DiGraph<int, int> graph;
+    DiGraph<int, int> graph;
 
-    // // Adding vertices
-    // graph.addVertex(0);
-    // graph.addVertex(1); 
-    // graph.addVertex(2);
-    // graph.addVertex(3); 
-    // graph.addVertex(4);
-    // graph.addVertex(5);
+    // Adding vertices
+    graph.addVertex(0);
+    graph.addVertex(1); 
+    graph.addVertex(2);
+    graph.addVertex(3); 
+    graph.addVertex(4);
+    graph.addVertex(5);
 
-    // // Adding edges
-    // graph.addEdge(0, 1, 1);
-    // graph.addEdge(0, 2, 1);
-    // graph.addEdge(1, 2, 1);
-    // graph.addEdge(2, 0, 1);
-    // graph.addEdge(2, 3, 1);
-    // graph.addEdge(3, 3, 1);
+    // Adding edges
+    graph.addEdge(0, 1, 1);
+    graph.addEdge(0, 2, 1);
+    graph.addEdge(1, 2, 1);
+    graph.addEdge(2, 0, 1);
+    graph.addEdge(2, 3, 1);
+    graph.addEdge(3, 3, 1);
 
-    // GraphDelta<int, int> del; 
+    GraphDelta<int, int> del; 
 
-    // del.generateDelta(graph, 0, 10);
+    del.generateDelta(graph, 1, 50, true);
 
-    // del.printDelta();
+    del.printDelta();
 
-    // graph.print();
+    graph.print();
 
-    // del.applyDelta(graph);
+    del.applyDelta(graph);
 
-    // graph.print();
+    graph.print();
     // // Testing vertex and edge existence
     // std::cout << "Vertex 2 exists: " << graph.hasVertex(2) << std::endl;
     // std::cout << "Edge (2, 3) exists: " << graph.hasEdge(2, 3) << std::endl;
