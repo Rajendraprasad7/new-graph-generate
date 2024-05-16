@@ -98,16 +98,16 @@ std::pair<int, int> getNewRandomEdge(const DiGraph<V, E>& graph) {
 
 // Get a random edge that doesnt already exist (can loop forever)
 template <typename V, typename E>
- pair<int, int> getNewRandomEdgeForcibly(const DiGraph<V, E>& graph) {
+pair<int, int> getNewRandomEdgeForcibly(const DiGraph<V, E>& graph) {
     static  random_device rd;
     static  mt19937 rng(rd());
 
     auto vertices = graph.getValidVertices();
-    int u = getRandomElement(vertices, rng);
-    int v = u;
-    while (v == u || graph.hasEdge(u, v)) {
+    int u,v;
+    do{
+        u = getRandomElement(vertices, rng);
         v = getRandomElement(vertices, rng);
-    }
+    }while (graph.hasEdge(u, v)); 
     return {u, v};
 }
 
@@ -122,7 +122,7 @@ vector<pair<int, int>> getNewRandomEdges(const DiGraph<V, E>& graph, int count, 
     int m = graph.getSize();
 
     if(strictDelta){
-        while(result.size() < std::min(count, n*(n-1) - m)){
+        while(result.size() < std::min(count, n*n - m)){
             pair<int, int> edge = getNewRandomEdgeForcibly(graph);
             if(mp.count(edge)) continue;
             result.push_back(edge);
