@@ -6,14 +6,17 @@
 #include <algorithm>
 
 #include "Graph.hxx"
+#include "utils.hxx"
 
 using std::vector;
-using std::uniform_int_distribution;
+using std::pair;
+using std::unordered_map;
 using std::make_pair;
 using std::back_inserter;
+using std::advance;
+using std::uniform_int_distribution;
 using std::random_device;
 using std::mt19937;
-using std::advance;
 
 // Helper function to get a random value from a container
 template <typename Container>
@@ -39,7 +42,7 @@ auto getRandomElement(Container& container, mt19937& rng) {
 
 // Get a vector of random existing edges. If count is greater than total edges, all edges are returned.
 template <typename V, typename E>
-vector<pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int count) {
+vector<pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int count, bool strictDelta) {
     static random_device rd;
     static mt19937 rng(rd());
 
@@ -55,6 +58,8 @@ vector<pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int co
         return result; 
     }
 
+    unordered_map<pair<int, int>, bool, PairHash> mp;
+
     uniform_int_distribution<> vertexDist(0, static_cast<int>(validVertices.size()) - 1);
 
     while (result.size() < count) {
@@ -66,7 +71,10 @@ vector<pair<int, int>> getExistingRandomEdges(const DiGraph<V, E>& graph, int co
             uniform_int_distribution<> edgeDist(0, static_cast<int>(outEdges.size()) - 1);
             int v = outEdges[edgeDist(rng)];
 
-            result.emplace_back(u, v);
+            pair<int, int> edge = make_pair(u, v);
+            if (mp.count(edge)) continue;
+            result.push_back(edge);
+            mp[edge] = true;
         }
     }
 
@@ -103,15 +111,22 @@ template <typename V, typename E>
     return {u, v};
 }
 
-// If the flag strictlyNew is set, it is assumed that graph is sparse enough to give new edges quickly
+// If the flag strictDelta is set, it is assumed that graph is sparse enough to give new edges quickly
 template <typename V, typename E>
-vector<pair<int, int>> getNewRandomEdges(const DiGraph<V, E>& graph, int count, bool strictlyNew) {
+vector<pair<int, int>> getNewRandomEdges(const DiGraph<V, E>& graph, int count, bool strictDelta) {
     vector<pair<int, int>> result;
+    unordered_map<pair<int, int>, bool, PairHash> mp;
     result.reserve(count);
 
-    if(strictlyNew){
-        for (int i = 0; i < count; ++i) {
-            result.push_back(getNewRandomEdgeForcibly(graph));
+    int n = graph.getOrder();
+    int m = graph.getSize();
+
+    if(strictDelta){
+        while(result.size() < std::min(count, n*(n-1) - m)){
+            pair<int, int> edge = getNewRandomEdgeForcibly(graph);
+            if(mp.count(edge)) continue;
+            result.push_back(edge);
+            mp[edge] = true;
         }
     }
     else{
@@ -128,9 +143,8 @@ public:
     vector<pair<int, int>> insertions;
     vector<pair<int, int>> deletions;
 
-    // Insertions/Deletions are SAMPLED WITH REPLACEMENT
-    // If strictDelta flag is set then each insertion/deletion will induce a change to the graph provided it is possible.
-    void generateDelta(const DiGraph<V, E>& graph, double alpha, int count, bool strictDelta) {
+    // If strictDelta flag is set then each insertion/deletion will surely induce a change to the graph.
+    void generateMixedDelta(const DiGraph<V, E>& graph, double alpha, int count, bool strictDelta) {
         static random_device rd;
         static mt19937 rng(rd());
 
@@ -138,16 +152,30 @@ public:
         int numDeletions = count - numInsertions;
 
         insertions = getNewRandomEdges(graph, numInsertions, strictDelta);
-        deletions = getExistingRandomEdges(graph, numDeletions);
+        deletions = getExistingRandomEdges(graph, numDeletions, strictDelta);
     }
 
-    void applyDelta(DiGraph<V, E>& graph) {
+    // void generatePreferentialAttachmentDelta(const DiGraph<V, E>& graph, int count, bool strictDelta) {
+    //     static random_device rd;
+    //     static mt19937 rng(rd());
+
+    //     vector<pair<int, int>> result; 
+
+
+    // }
+
+    void applyCurrentDelta(DiGraph<V, E>& graph) {
         for (const auto& edge: insertions) {
             graph.addEdge(edge.first, edge.second);
         }
         for (const auto& edge: deletions) {
             graph.removeEdge(edge.first, edge.second);
         }
+    }
+
+    void clearDelta() {
+        insertions.clear();
+        deletions.clear();
     }
 
     void printDelta() const {
