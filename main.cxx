@@ -3,44 +3,17 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    // if (argc != 2) {
-    //     cout << "Usage: " << argv[0] << " <input_file>" << endl;
-    //     return 1;
-    // }
+    
+    if (argc != 2) {
+        cout << "Usage: " << argv[0] << " <input_file>" << endl;
+    }
 
-    // const string inputFileName = argv[1];
-    // ifstream inputFile(inputFileName);
-    // if (!inputFile.is_open()) {
-    //     cout << "Error: Failed to open input file." << endl;
-    //     return 1;
-    // }
+    DiGraph<int, int> graph = handleFile<int, int>(argc, argv);
 
-    // int numVertices, numEdges;
-    // string line;
-    // getline(inputFile, line); // Read the first line to check for comments
-    // while (getline(inputFile, line) && line[0] == '%') {
-    //     // Skip comment lines
-    // }
 
-    // istringstream iss(line);
-    // iss >> numVertices >> numVertices >> numEdges; // Read dimensions from the header line
-    // DiGraph<int, int> graph;
+    cout << graph.getSize() << ' ' << graph.getOrder() << endl;
 
-    // // Add vertices
-    // for (int i = 0; i < numVertices; ++i) {
-    //     graph.addVertex(i);
-    // }
-
-    // // Add edges
-    // while (getline(inputFile, line)) {
-    //     istringstream iss(line);
-    //     int u, v;
-    //     iss >> u >> v;
-    //     graph.addEdge(u - 1, v - 1); // Adjust indices since MTX format is 1-based
-    //     // graph.addEdge(v - 1, u - 1);
-    // }
-
-    // cout << graph.getSize() << ' ' << graph.getOrder() << endl;
+    // cout << breadthFirstSearch(graph, 999).size() << endl;
 
     // GraphDelta<int, int> del; 
 
@@ -110,16 +83,19 @@ int main(int argc, char* argv[]) {
 
     // GraphDelta<int, int> del; 
 
+    // std::cout<<graph;
     // // del.generateMixedDelta(graph, 0, 3, true);
     // del.generatePreferentialAttachmentDelta(graph, 10, false, 0, 1, 0);
 
-    // del.printDelta();
+    // // del.printDelta();
 
-    // graph.print();
+    // std::cout<<del;
 
     // del.applyCurrentDelta(graph);
 
-    // graph.print();
+    // std::cout<<graph;
+
+    // std::cout<<del;
     // // Testing vertex and edge existence
     // std::cout << "Vertex 2 exists: " << graph.hasVertex(2) << std::endl;
     // std::cout << "Edge (2, 3) exists: " << graph.hasEdge(2, 3) << std::endl;

@@ -211,26 +211,26 @@ class DiGraph
             return edges;
         }
 
-        // Print DiGraph
-        void print() const {
-            for (int u = 0; u < vertexCount; ++u) {
-                if (!valid[u])
+        friend std::ostream& operator<<(std::ostream& os, const DiGraph<V, E>& graph) {
+            for (int u = 0; u < graph.vertexCount; ++u) {
+                if (!graph.valid[u])
                     continue;
-                std::cout << "Vertex " << u << ": " << vertexData[u] << '\n';
-                std::cout << "  Outgoing edges: ";
-                std::vector<int> outEdges = getOutEdges(u);
+                os << "Vertex " << u << ": " << graph.vertexData[u] << '\n';
+                os << "  Outgoing edges: ";
+                std::vector<int> outEdges = graph.getOutEdges(u);
                 for (int v : outEdges) {
-                    std::cout << "(" << u << ", " << v << ", " << edgeData[u].at(v) << ") ";
+                    os << "(" << u << ", " << v << ", " << graph.edgeData[u].at(v) << ") ";
                 }
-                std::cout << '\n';
-                std::cout << "  Incoming edges: ";
-                auto inEdges = getInEdges(u);
+                os << '\n';
+                os << "  Incoming edges: ";
+                auto inEdges = graph.getInEdges(u);
                 for (auto it = inEdges.begin(); it != inEdges.end(); ++it) {
                     int v = *it;
-                    std::cout << "(" << v << ", " << u << ", " << edgeData[v].at(u) << ") ";
+                    os << "(" << v << ", " << u << ", " << graph.edgeData[v].at(u) << ") ";
                 }
-                std::cout << '\n';
+                os << '\n';
             }
+            return os;
         }
 };      
 
