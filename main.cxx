@@ -4,28 +4,30 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
     
-    if (argc != 2) {
-        cout << "Usage: " << argv[0] << " <input_file>" << endl;
-    }
+    // if (argc != 2) {
+    //     cout << "Usage: " << argv[0] << " <input_file>" << endl;
+    //     return 1;
+    // }
 
-    DiGraph<int, int> graph = handleFile<int, int>(argc, argv);
+    // DiGraph<int, int> graph = handleFile<int, int>(argc, argv);
 
 
-    cout << graph.getSize() << ' ' << graph.getOrder() << endl;
+    // cout << graph.getSize() << ' ' << graph.getOrder() << endl;
 
-    // cout << breadthFirstSearch(graph, 999).size() << endl;
+    // cout << graph;
+
+    // // cout << breadthFirstSearch(graph, 999).size() << endl;
 
     // GraphDelta<int, int> del; 
 
-    // del.generateDelta(graph, 0, 1000);
+    // // del.generatePreferentialMixedDelta(graph, 10, 0, 1, 0, 1, 1, 0.5);
+    // del.generateMixedDelta(graph, 0.5, 10, 1);
 
-    // del.printDelta();
+    // std::cout << del;
 
-    // // graph.print();
-
-    // del.applyDelta(graph);
+    // del.applyCurrentDelta(graph);
     
-    // graph.print();
+    // std::cout << graph;
     // cout << graph.getSize() << ' ' << graph.getOrder() << endl;
 
     // int inEdges = 0, outEdges = 0;

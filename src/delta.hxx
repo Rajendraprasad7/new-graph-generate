@@ -33,29 +33,30 @@ public:
     /**
      * @brief Generates a mixed delta of edge insertions and deletions.
      * @param graph The original graph.
-     * @param alpha The proportion of insertions in the delta.
+     * @param epsilon The proportion of insertions in the delta.
      * @param count The total number of changes in the delta.
      * @param strictDelta Flag indicating if each insertion/deletion should induce a change to the graph.
      */
-    void generateMixedDelta(const DiGraph<V, E>& graph, double alpha, int count, bool strictDelta) {
+    void generateMixedDelta(const DiGraph<V, E>& graph, double epsilon, int count, bool strictDelta) {
         static random_device rd;
         static mt19937 rng(rd());
-        int numInsertions = static_cast<int>(alpha * count);
+        int numInsertions = static_cast<int>(epsilon * count);
         int numDeletions = count - numInsertions;
         insertions = getNewRandomEdges(graph, numInsertions, strictDelta);
         deletions = getExistingRandomEdges(graph, numDeletions, strictDelta);
     }
 
     /**
-     * @brief Generates a delta using preferential attachment function.
+     * @brief Generates an insertion delta using preferential attachment function.
      * @param graph The original graph.
      * @param count The total number of changes in the delta.
-     * @param strictDelta Flag indicating if each insertion/deletion should induce a change to the graph.
      * @param alpha The alpha parameter of the preferential attachment function.
      * @param beta The beta parameter of the preferential attachment function.
      * @param lambda The lambda parameter of the preferential attachment function.
+     * @param strictPreferential Flag indicating if both the source and target vertices are preferentially chosen.
+     * @param strictDelta Flag indicating if each insertion should induce a change to the graph.
      */
-    void generatePreferentialAttachmentDelta(const DiGraph<V, E>& graph, int count, bool strictDelta, double alpha, double beta, double lambda) {
+    void generatePreferentialAttachmentDelta(const DiGraph<V, E>& graph, int count, double alpha, double beta, double lambda, bool strictPreferential, bool strictDelta) {
         static random_device rd;
         static mt19937 rng(rd());
         vector<pair<int, int>> result;
@@ -77,11 +78,27 @@ public:
         }
         discrete_distribution<int> vertexDist(f.begin(), f.end());
         while (result.size() < std::min(count,n*n)) {
-            int u = getRandomElement(vertices, rng);
-            int v = vertices[vertexDist(rng)];
+            int u,v;
+            if(strictPreferential){
+                u = vertices[vertexDist(rng)];
+                v = vertices[vertexDist(rng)];
+            }
+            else{
+                u = getRandomElement(vertices, rng);
+                v = vertices[vertexDist(rng)];
+            }
             if(strictDelta){
-                while (graph.hasEdge(u, v)) {
-                    v = vertices[vertexDist(rng)];
+                if(strictPreferential){
+                    while (graph.hasEdge(u, v)) {
+                        u = vertices[vertexDist(rng)];
+                        v = vertices[vertexDist(rng)];
+                    }
+                }
+                else{
+                    while (graph.hasEdge(u, v)) {
+                        u = getRandomElement(vertices, rng);
+                        v = vertices[vertexDist(rng)];
+                    }
                 }
                 pair<int, int> edge = make_pair(u, v);
                 if (mp.count(edge)) continue;
@@ -96,6 +113,94 @@ public:
         insertions = result;
     }
 
+    /**
+     * @brief Generates a deletion delta using preferential function.
+     * @param graph The original graph.
+     * @param count The total number of changes in the delta.
+     * @param alpha The alpha parameter of the preferential function.
+     * @param beta The beta parameter of the preferential function.
+     * @param lambda The lambda parameter of the preferential function.
+     * @param strictPreferential Flag indicating if both the source and target vertices are preferentially chosen.
+     * @param strictDelta Flag indicating if each deletion should induce a change to the graph.
+     */
+    void generatePreferentialDetachmentDelta(const DiGraph<V, E>& graph, int count, double alpha, double beta, double lambda, bool strictPreferential, bool strictDelta) {
+        static random_device rd;
+        static mt19937 rng(rd());
+        vector<pair<int, int>> result;
+        unordered_map<pair<int, int>, bool, PairHash> mp;
+        result.reserve(count);
+        auto vertices = graph.getValidVertices();
+        int n = vertices.size();
+        int numEdges = graph.getSize();
+        vector<double> f(n);
+        double total_f = 0.0;
+        for (int i = 0; i < n; ++i) {
+            double d = graph.getInDegree(vertices[i]);
+            double wt = exp(alpha + beta * log(1 + d)) - lambda;
+            if (wt < 0) wt = 0; 
+            f[i] = wt;
+            total_f += wt;
+        }
+        for (double& p : f) {
+            p /= total_f;
+        }
+        discrete_distribution<int> vertexDist(f.begin(), f.end());
+        while (result.size() < std::min(count,numEdges)) {
+            int u,v;
+            if(strictPreferential){
+                u = vertices[vertexDist(rng)];
+                v = vertices[vertexDist(rng)];
+            }
+            else{
+                u = getRandomElement(vertices, rng);
+                v = vertices[vertexDist(rng)];
+            }
+            if(strictDelta){
+                if(strictPreferential){
+                    while (!graph.hasEdge(u, v)) {
+                        u = vertices[vertexDist(rng)];
+                        v = vertices[vertexDist(rng)];
+                    }
+                }
+                else{
+                    while (!graph.hasEdge(u, v)) {
+                        u = getRandomElement(vertices, rng);
+                        v = vertices[vertexDist(rng)];
+                    }
+                }
+                pair<int, int> edge = make_pair(u, v);
+                if (mp.count(edge)) continue;
+                result.push_back(edge);
+                mp[edge] = true;
+            }
+            else{
+                pair<int, int> edge = make_pair(u, v);
+                result.push_back(edge);
+            }
+        }
+        deletions = result;
+    }
+
+    /** 
+     * @brief Generates a mixed delta of edge insertions and deletions using preferential function.
+     * @param graph The original graph.
+     * @param count The total number of changes in the delta.
+     * @param alpha The alpha parameter of the preferential attachment function.
+     * @param beta The beta parameter of the preferential attachment function.
+     * @param lambda The lambda parameter of the preferential attachment function.
+     * @param strictPreferential Flag indicating if both the source and target vertices are preferentially chosen.
+     * @param strictDelta Flag indicating if each insertion/deletion should induce a change to the graph.
+     * @param epsilon The fraction of insertions in the delta.
+     */
+    void generatePreferentialMixedDelta(const DiGraph<V, E>& graph, int count, double alpha, double beta, double lambda, bool strictPreferential, bool strictDelta, double epsilon) {
+        static random_device rd;
+        static mt19937 rng(rd());
+        int numInsertions = static_cast<int>(epsilon * count);
+        int numDeletions = count - numInsertions;
+        generatePreferentialAttachmentDelta(graph, numInsertions, alpha, beta, lambda, strictPreferential, strictDelta);
+        generatePreferentialDetachmentDelta(graph, numDeletions, alpha, beta, lambda, strictPreferential, strictDelta);
+    }
+        
     /**
      * @brief Applies the current delta to a graph.
      * @param graph The graph to apply the delta to.
